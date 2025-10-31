@@ -32,9 +32,15 @@ cursor.executescript('''
         user_id INTEGER,
         course_id INTEGER,
         role INTEGER,
-        PRIMARY KEY (user_id, course_id))
+        PRIMARY KEY (user_id, course_id),
+        FOREIGN KEY (user_id) REFERENCES User(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+        FOREIGN KEY (course_id) REFERENCES Course(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE)
     ''')
-    #FOR MEMBER TABLE WE CREATE A COMPOSITE PRIMARY KEY WHICH IS COMBO BETWEEN THE 2 FOREIGN KEYS
+    #FOR MEMBER TABLE WE CREATE A COMPOSITE PRIMARY KEY WHICH IS COMBO BETWEEN THE 2 FOREIGN KEYS. In the table you don't have an ID column but you have primary key as the two foreign keys columns (no extra column for id)
 
 file_name = input("Enter file name: ")
 if len(file_name) < 1:
@@ -78,3 +84,23 @@ cursor.execute('''SELECT 'XYZZY' || hex(User.name || Course.name || Member.role 
 final_result = cursor.fetchall()
 print(final_result)
 connection.close()
+
+#THIS IS FINE BUT IT DOESN'T CREATE FOREIGN KEYS CONSTRAINTS. As it stands your python file knows that the keys are related but your database does not. You can add foreign keys in you schema so your database treats them as such.
+#this comes in handy when you want to delete on cascade. You delete one user and all the rows with that user get eliminated. Same goes for the deletion of a course.
+#use conn.execute("PRAGMA foreign_keys = ON;") to enable foreign keys on SQLite
+#EVERYTHING IN SCHEMA IS THE SAME APART FROM THE MEMBER TABLE, once you add COMPOSITE PRIMARY KEY, you make the foreign keys
+#POPULATION OF DATA DOES NOT CHANGE IN THE FILE, WORKS EXACTLY THE SAME, but if we try to insert an invalid foreign key it will now raise a sqlite3.IntegrityError
+'''
+CREATE TABLE Member (
+    user_id INTEGER,
+    course_id INTEGER,
+    role INTEGER,
+    PRIMARY KEY (user_id, course_id),
+    FOREIGN KEY (user_id) REFERENCES User(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES Course(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+'''
